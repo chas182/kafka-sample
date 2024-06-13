@@ -15,10 +15,10 @@ services:
     hostname: kafka
     container_name: kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_started
     ports:
       - "9092:9092"
-      - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -29,6 +29,11 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_LOG_DIRS: /var/lib/kafka/data
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
 
   init-kafka:
     image: confluentinc/cp-kafka:latest
@@ -49,14 +54,11 @@ services:
       "
 
   kafka-producer-app:
-    image: azul/zulu-openjdk-alpine:21.0.1-21.30.15
+    build:
+      context: ./kafka-producer
     container_name: kafka-producer-app
     ports:
       - "8080:8080"
-    volumes:
-      - ./kafka-producer:/app
-    working_dir: /app
-    command: [ "./gradlew", "bootRun" ]
     depends_on:
-      - kafka
-      - zookeeper
+      init-kafka:
+        condition: service_completed_successfully

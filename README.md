@@ -12,4 +12,4 @@ Topics auto created:
 * transaction-topic
 
 Spring Boot Components available:
-* Producer http://localhost:8080/swagger-ui/
+* Producer http://localhost:8080/swagger-ui/index.html

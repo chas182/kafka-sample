@@ -115,7 +115,7 @@ public class KafkaProducerAppIT {
                 .statusCode(200);
 
 
-        ConsumerRecord<Long, String> record = pollForRecord(CLIENT_TOPIC);
+        ConsumerRecord<Long, String> record = pollForRecord();
 
         assertThat(record).isNotNull();
         assertThat(record.key()).isEqualTo(client.getClientId());
@@ -135,27 +135,19 @@ public class KafkaProducerAppIT {
                 .then()
                 .statusCode(200);
 
-        ConsumerRecord<Long, String> record = pollForRecord(TRANSACTION_TOPIC);
+        ConsumerRecord<Long, String> record = pollForRecord();
 
         assertThat(record).isNotNull();
         assertThat(record.key()).isEqualTo(transaction.getClientId());
         assertThat(record.value()).isEqualTo(transactionJson);
     }
 
-    private ConsumerRecord<Long, String> pollForRecord(String topic) {
+    private ConsumerRecord<Long, String> pollForRecord() {
         ConsumerRecord<Long, String> record = null;
         for (int i = 0; i < 10; i++) {
             var records = consumer.poll(Duration.ofMillis(1000));
             if (!records.isEmpty()) {
-                for (ConsumerRecord<Long, String> r : records) {
-                    if (r.topic().equals(topic)) {
-                        record = r;
-                        break;
-                    }
-                }
-            }
-            if (record != null) {
-                break;
+                return records.iterator().next();
             }
         }
         return record;
