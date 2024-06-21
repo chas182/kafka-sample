@@ -78,7 +78,7 @@ public class KafkaProducerAppIT {
     private Transaction transaction;
 
     @BeforeEach
-    void setU22p() {
+    void setUp() {
         RestAssured.baseURI = "http://localhost:" + port;
 
         client = new Client();

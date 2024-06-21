@@ -53,6 +53,30 @@ services:
       kafka-topics --bootstrap-server kafka:29092 --list
       "
 
+  postgres-db:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=kafka-sample'
+      - 'POSTGRES_PASSWORD=topsecret'
+      - 'POSTGRES_USER=appuser'
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready", "-d", "db_prod" ]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+
+  liquibase:
+    image: 'liquibase/liquibase:latest'
+    container_name: Liquibase_container
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    volumes:
+      - ./liquibase/changelog/:/liquibase/changelog/
+    command: --defaults-file=/liquibase/changelog/liquibase.properties update
+
   kafka-producer-app:
     build:
       context: ./kafka-producer
@@ -61,4 +85,14 @@ services:
       - "8080:8080"
     depends_on:
       init-kafka:
+        condition: service_completed_successfully
+
+  kafka-consumer-app:
+    build:
+      context: ./kafka-consumer
+    container_name: kafka-consumer-app
+    depends_on:
+      init-kafka:
+        condition: service_completed_successfully
+      liquibase:
         condition: service_completed_successfully
